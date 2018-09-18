@@ -37,21 +37,21 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		 *
 		 * @var string
 		 */
-		static protected $api_key;
+		protected $access_token;
 
 		/**
 		 * PubSub topic.
 		 *
 		 * @var string
 		 */
-		static protected $topic;
-		
+		protected $topic;
+
 		/**
 		 * GCP project name.
 		 *
 		 * @var string
 		 */
-		static protected $project;
+		protected $project;
 
 		/**
 		 * PubSub BaseAPI Endpoint
@@ -72,12 +72,12 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		/**
 		 * Class constructor.
 		 *
-		 * @param string $api_key  Auth token.
+		 * @param string $access_token  Auth token.
 		 */
-		public function __construct( $api_key, $project, $topic ) {
-			static::$api_key = $api_key;
-			static::$project = $project;
-			static::$topic   = $topic;
+		public function __construct( $access_token, $project, $topic ) {
+			$this->access_token = $access_token;
+			$this->project = $project;
+			$this->topic   = $topic;
 		}
 
 		/**
@@ -92,7 +92,7 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 			// Start building query.
 			$this->set_headers();
 			$this->args['method'] = $method;
-			$this->route = $route;
+			$this->route = "projects/{$this->project}/topics/{$this->topic}$route";
 
 			// Generate query string for GET requests.
 			if ( 'GET' === $method ) {
@@ -102,9 +102,7 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 			} else {
 				$this->args['body'] = $args;
 			}
-			
-			$this->route = add_query_arg( 'key', static::$api_key, $route );
-			
+
 			$this->args['timeout'] = 20;
 
 			return $this;
@@ -119,9 +117,7 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		 */
 		protected function fetch() {
 			// Make the request.
-			// pp( $this->base_uri . $this->route, $this->args );
 			$response = wp_remote_request( $this->base_uri . $this->route, $this->args );
-			// pp( $response );
 
 			// Retrieve Status code & body.
 			$code = wp_remote_retrieve_response_code( $response );
@@ -135,9 +131,9 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 
 			return $body;
 		}
-		
+
 		public function set_topic( $topic ){
-			
+
 		}
 
 
@@ -148,6 +144,7 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 			// Set request headers.
 			$this->args['headers'] = array(
 					'Content-Type' => 'application/json',
+					'Authorization' => 'Bearer ' . $this->access_token,
 			);
 		}
 
@@ -175,12 +172,19 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		 *
 		 * @api POST
 		 * @access public
-		 * @param string $topic Topic to pubilsh to (i.e. projects/<project_name>/topics/<your_topic> )
 		 * @param string $data  Post data to send. Note, either the data field or attributes fields must have content for call to work.
 		 * @return array        Updated user info.
 		 */
-		public function publish( string $topic, $data = array() ) {
-			return $this->build_request( "$topic:publish", $data, 'POST' )->fetch();
+		public function publish( $messages = array() ) {
+
+			foreach($messages as &$message ){
+				if( isset( $message['data']) ){
+					$message['data'] = (( is_array( $message['data'] ) ) ? json_encode( $message['data'] ) : $message['data']);
+					$message['data'] = rtrim( strtr( base64_encode( $message['data'] ), '+/', '-_'), '=');
+				}
+			}
+
+			return $this->build_request( ":publish", array( 'messages' => $messages ), 'POST' )->fetch();
 		}
 
 	}
