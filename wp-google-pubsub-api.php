@@ -17,7 +17,8 @@
  */
 
 /* Exit if accessed directly */
-if ( ! defined( 'ABSPATH' ) ) { exit; }
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; }
 
 if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 
@@ -76,8 +77,8 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		 */
 		public function __construct( $access_token, $project, $topic ) {
 			$this->access_token = $access_token;
-			$this->project = $project;
-			$this->topic   = $topic;
+			$this->project      = $project;
+			$this->topic        = $topic;
 		}
 
 		/**
@@ -92,7 +93,7 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 			// Start building query.
 			$this->set_headers();
 			$this->args['method'] = $method;
-			$this->route = "projects/{$this->project}/topics/{$this->topic}$route";
+			$this->route          = "projects/{$this->project}/topics/{$this->topic}$route";
 
 			// Generate query string for GET requests.
 			if ( 'GET' === $method ) {
@@ -132,7 +133,7 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 			return $body;
 		}
 
-		public function set_topic( $topic ){
+		public function set_topic( $topic ) {
 
 		}
 
@@ -143,8 +144,8 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		protected function set_headers() {
 			// Set request headers.
 			$this->args['headers'] = array(
-					'Content-Type' => 'application/json',
-					'Authorization' => 'Bearer ' . $this->access_token,
+				'Content-Type'  => 'application/json',
+				'Authorization' => 'Bearer ' . $this->access_token,
 			);
 		}
 
@@ -152,7 +153,7 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		 * Clear query data.
 		 */
 		protected function clear() {
-			$this->args = array();
+			$this->args       = array();
 			$this->query_args = array();
 		}
 
@@ -169,7 +170,6 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		/**
 		 * Publish
 		 *
-		 *
 		 * @api POST
 		 * @access public
 		 * @param string $data  Post data to send. Note, either the data field or attributes fields must have content for call to work.
@@ -177,14 +177,14 @@ if ( ! class_exists( 'WPGooglePubSubAPI' ) ) {
 		 */
 		public function publish( $messages = array() ) {
 
-			foreach($messages as &$message ){
-				if( isset( $message['data']) ){
-					$message['data'] = (( is_array( $message['data'] ) ) ? json_encode( $message['data'] ) : $message['data']);
-					$message['data'] = rtrim( strtr( base64_encode( $message['data'] ), '+/', '-_'), '=');
+			foreach ( $messages as &$message ) {
+				if ( isset( $message['data'] ) ) {
+					$message['data'] = ( ( is_array( $message['data'] ) ) ? json_encode( $message['data'] ) : $message['data'] );
+					$message['data'] = rtrim( strtr( base64_encode( $message['data'] ), '+/', '-_' ), '=' );
 				}
 			}
 
-			return $this->build_request( ":publish", array( 'messages' => $messages ), 'POST' )->fetch();
+			return $this->build_request( ':publish', array( 'messages' => $messages ), 'POST' )->fetch();
 		}
 
 	}
